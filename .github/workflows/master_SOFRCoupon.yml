@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP app to Azure Web App - SOFRCoupon
+name: Build and deploy Python app to Azure Web App - SOFRCoupon
 
 on:
   push:
@@ -11,27 +11,29 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: 'windows-latest'
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@master
 
-    - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Set up Python version
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.6'
 
-    - name: Setup NuGet
-      uses: NuGet/setup-nuget@v1.0.5
+    - name: Install Python dependencies
+      run: |
+        python -m venv env
+        .\env\Scripts\activate
+        pip install -r requirements.txt
 
-    - name: Restore NuGet packages
-      run: nuget restore
+    - name: Zip the application files
+      run: Compress-Archive .\* app.zip
 
-    - name: Publish to folder
-      run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
-
-    - name: Deploy to Azure Web App
+    - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'SOFRCoupon'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_29f9616ebd574a71a43b0662f5287de0 }}
-        package: \published\
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_3069b25d880a4fa0803b7e4faffc7fe8 }}
+        package: '.\app.zip'
